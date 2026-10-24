@@ -68,6 +68,20 @@ const barBot  = $('barBot');
 const uline   = $('uline').querySelector('.uline__path');
 const bloom   = $('bloom');
 const replay  = $('replay');
+const endActions = $('endActions');
+const surpriseBtn = $('surpriseBtn');
+const surprise = $('surprise');
+const lockEl = $('lock');
+const lockDots = $('lockDots');
+const lockError = $('lockError');
+const lockPad = $('lockPad');
+const envelopeStage = $('envelopeStage');
+const envelope = $('envelope');
+const envelopeCue = $('envelopeCue');
+const envelopeClose = $('envelopeClose');
+
+const SURPRISE_PIN = '2510';
+let pinBuf = '';
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isRecord     = new URLSearchParams(location.search).has('record');
@@ -529,6 +543,7 @@ function drawFinal(){
   drawRested(); drawFloaters(99, 0, true);
   showWish(true);
   window.bdayDone = true;
+  if (!replayArmed){ replayArmed = true; armReplay(); }
 }
 
 /* ============================================================
@@ -873,16 +888,116 @@ function enter(){
 }
 
 function armReplay(){
-  replay.hidden = false;
-  requestAnimationFrame(() => replay.classList.add('is-shown'));
+  endActions.hidden = false;
+  requestAnimationFrame(() => endActions.classList.add('is-shown'));
+}
+
+function hideEndActions(){
+  endActions.classList.remove('is-shown');
+  endActions.hidden = true;
+}
+
+function resetPin(){
+  pinBuf = '';
+  lockDots.querySelectorAll('.lock__dot').forEach((d) => d.classList.remove('is-on'));
+  lockError.hidden = true;
+  lockEl.classList.remove('is-shake');
+}
+
+function paintPin(){
+  lockDots.querySelectorAll('.lock__dot').forEach((d, i) => {
+    d.classList.toggle('is-on', i < pinBuf.length);
+  });
+}
+
+function openSurprise(){
+  surprise.hidden = false;
+  surprise.setAttribute('aria-hidden', 'false');
+  surprise.classList.add('is-lock');
+  lockEl.hidden = false;
+  envelopeStage.hidden = true;
+  envelope.classList.remove('is-open');
+  envelopeStage.classList.remove('is-open');
+  if (envelopeCue) envelopeCue.textContent = 'tap the seal to open';
+  resetPin();
+}
+
+function closeSurprise(){
+  surprise.classList.remove('is-lock');
+  surprise.hidden = true;
+  surprise.setAttribute('aria-hidden', 'true');
+  lockEl.hidden = false;
+  envelopeStage.hidden = true;
+  envelope.classList.remove('is-open');
+  envelopeStage.classList.remove('is-open');
+  resetPin();
+}
+
+function unlockToEnvelope(){
+  surprise.classList.remove('is-lock');
+  lockEl.hidden = true;
+  envelopeStage.hidden = false;
+  envelope.classList.remove('is-open');
+  envelopeStage.classList.remove('is-open');
+  if (envelopeCue) envelopeCue.textContent = 'tap the seal to open';
+}
+
+function openEnvelope(){
+  envelope.classList.add('is-open');
+  envelopeStage.classList.add('is-open');
+}
+
+function onPinDigit(n){
+  if (pinBuf.length >= 4) return;
+  pinBuf += n;
+  paintPin();
+  if (pinBuf.length < 4) return;
+
+  if (pinBuf === SURPRISE_PIN){
+    lockError.hidden = true;
+    setTimeout(unlockToEnvelope, 220);
+    return;
+  }
+
+  lockError.hidden = false;
+  lockEl.classList.remove('is-shake');
+  void lockEl.offsetWidth;
+  lockEl.classList.add('is-shake');
+  setTimeout(() => { resetPin(); }, 420);
+}
+
+function wireSurprise(){
+  surpriseBtn.addEventListener('click', openSurprise);
+
+  lockPad.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-n]');
+    if (!btn) return;
+    const n = btn.dataset.n;
+    if (n === 'clear'){ resetPin(); return; }
+    if (n === 'close'){ closeSurprise(); return; }
+    onPinDigit(n);
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (surprise.hidden || lockEl.hidden) return;
+    if (e.key >= '0' && e.key <= '9'){ e.preventDefault(); onPinDigit(e.key); }
+    else if (e.key === 'Backspace'){ e.preventDefault(); pinBuf = pinBuf.slice(0, -1); paintPin(); lockError.hidden = true; }
+    else if (e.key === 'Escape'){ e.preventDefault(); closeSurprise(); }
+  });
+
+  envelope.addEventListener('click', () => {
+    if (!envelope.classList.contains('is-open')) openEnvelope();
+  });
+  envelopeClose.addEventListener('click', closeSurprise);
 }
 
 /* back to Act 1, ready to be drawn again */
 function resetAll(){
+  closeSurprise();
   treeStop();
   showWish(false);
   window.bdayDone = false; replayArmed = false;
-  replay.classList.remove('is-shown'); replay.hidden = true;
+  hideEndActions();
   if (filmTL){ filmTL.pause(0); }
   gsap.set([flood, bloom], { autoAlpha: 0 });
   gsap.set(field, { autoAlpha: 0 });
@@ -915,6 +1030,8 @@ let resizeRAF = 0;
 window.addEventListener('resize', () => { if (resizeRAF) return; resizeRAF = requestAnimationFrame(() => { resizeRAF = 0; resize(); }); });
 
 resize();
+
+wireSurprise();
 
 if (reduceMotion){
   drawFinal();
