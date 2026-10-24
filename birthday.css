@@ -488,15 +488,26 @@ body{
 .endActions[hidden]{
   display:none !important;
 }
+/* Center with left/right + margin — NOT transform (stageIn would wipe translate(-50%)). */
 .endActions.is-shown{
   display:flex !important;
-  position:absolute; left:50%; bottom:max(22px, env(safe-area-inset-bottom));
-  transform:translate(-50%, 0);
+  position:absolute;
+  left:0; right:0;
+  width:min(92vw, 340px);
+  margin-inline:auto;
+  bottom:max(22px, calc(env(safe-area-inset-bottom) + 10px));
   z-index:20;
-  flex-direction:column; align-items:center; gap:12px;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
   opacity:1;
   pointer-events:auto;
-  animation:stageIn .55s var(--ease-out) both;
+  animation:endActionsIn .55s var(--ease-out) both;
+}
+@keyframes endActionsIn{
+  from{ opacity:0; transform:translateY(14px); }
+  to{ opacity:1; transform:translateY(0); }
 }
 
 .surpriseBtn{
@@ -527,7 +538,8 @@ body{
 }
 
 .replay{
-  display:inline-flex; align-items:center; gap:7px;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  min-width:140px;
   padding:9px 15px 9px 12px; border-radius:999px;
   font:600 12.5px/1 "Cormorant Garamond", Georgia, serif; letter-spacing:.12em; text-transform:uppercase;
   color:#8a4a5a; background:rgba(255,248,242,.82);
@@ -806,7 +818,7 @@ body{
 
   .wish{
     left:4%; right:4%;
-    bottom:max(18%, calc(env(safe-area-inset-bottom) + 92px));
+    bottom:max(22%, calc(env(safe-area-inset-bottom) + 120px));
     max-width:none;
   }
   .wish__hero{ font-size:clamp(52px, 16vw, 78px); }
@@ -814,9 +826,10 @@ body{
   .wish__sub{ font-size:clamp(13px, 3.6vw, 16px); }
 
   .endActions.is-shown{
-    left:50%; right:auto;
-    width:min(92vw, 340px);
-    bottom:max(16px, calc(env(safe-area-inset-bottom) + 12px));
+    left:0; right:0;
+    width:min(90vw, 320px);
+    margin-inline:auto;
+    bottom:max(14px, calc(env(safe-area-inset-bottom) + 10px));
     gap:10px;
   }
   .surpriseBtn{
@@ -828,7 +841,9 @@ body{
     letter-spacing:.12em;
   }
   .replay{
-    min-height:42px;
+    width:100%;
+    min-width:0;
+    min-height:44px;
     padding:10px 16px;
   }
 
