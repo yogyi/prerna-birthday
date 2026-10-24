@@ -32,7 +32,11 @@
 }
 
 *{ box-sizing:border-box; margin:0; padding:0; }
-html, body{ height:100%; }
+html, body{
+  height:100%;
+  height:100dvh;
+  overscroll-behavior:none;
+}
 
 body{
   background:#14060e;
@@ -40,9 +44,16 @@ body{
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
   cursor:auto;
+  -webkit-text-size-adjust:100%;
+  touch-action:manipulation;
 }
 
-.scene{ position:fixed; inset:0; overflow:hidden; }
+.scene{
+  position:fixed; inset:0;
+  width:100%; height:100%;
+  height:100dvh;
+  overflow:hidden;
+}
 
 .sr-only{
   position:absolute; width:1px; height:1px; padding:0; margin:-1px;
@@ -178,11 +189,18 @@ body{
    JS from measured geometry; everything below is in the rig's own space. */
 .archery{
   position:absolute; top:0; left:0;    /* JS sets left/top so the grip anchors */
-  width:clamp(100px, 18vw, 168px);     /* smaller, daintier bow — delicate against the heart */
+  width:clamp(118px, 28vw, 168px);
   cursor:grab;
   -webkit-tap-highlight-color:transparent;
   touch-action:none;                   /* we own the drag gesture */
   will-change:transform;
+}
+/* invisible finger pad around the bow (does not shift SVG geometry) */
+.archery::before{
+  content:"";
+  position:absolute;
+  inset:-28px -22px -36px -22px;
+  border-radius:40%;
 }
 .archery:active{ cursor:grabbing; }
 .archery:focus-visible{ outline:none; }
@@ -380,7 +398,7 @@ body{
    ============================================================ */
 .wish{
   position:absolute;
-  left:5%; bottom:9%;
+  left:5%; bottom:max(9%, calc(env(safe-area-inset-bottom) + 8%));
   max-width:min(72%, 520px);
   z-index:6;
   pointer-events:none;
@@ -758,9 +776,157 @@ body{
   color:#a85069; text-align:right;
 }
 
-@media (max-width:420px){
-  .surpriseBtn{ min-width:min(90vw, 280px); padding:14px 22px; font-size:13px; }
-  .envelope{ height:220px; }
+/* ============================================================
+   PHONE-FIRST — tuned for portrait phones (~390×844 and below)
+   ============================================================ */
+@media (max-width: 720px){
+  .hero__brand{
+    top:max(5.5%, env(safe-area-inset-top));
+    font-size:clamp(40px, 14vw, 64px);
+  }
+  .hero__eyebrow{
+    top:calc(max(5.5%, env(safe-area-inset-top)) + 3.2rem);
+    font-size:clamp(13px, 3.6vw, 16px);
+    padding:0 18px;
+  }
+  .targetWrap{ top:34%; }
+  .target{ width:clamp(108px, 34vw, 150px); }
+  .archery{ width:clamp(130px, 38vw, 170px); }
+  .hero__hint{
+    bottom:max(6%, calc(env(safe-area-inset-bottom) + 12px));
+    font-size:13px;
+    letter-spacing:.14em;
+  }
+
+  .hl__word{ font-size:clamp(34px, 12vw, 64px); }
+  .hl__line--name .hl__word{ font-size:clamp(52px, 18vw, 88px); }
+  .kEyebrow, .kSub{ font-size:clamp(13px, 3.8vw, 18px); padding:0 12px; }
+  .uline{ width:min(70vw, 260px); }
+  .bar{ height:12vh; }
+
+  .wish{
+    left:4%; right:4%;
+    bottom:max(18%, calc(env(safe-area-inset-bottom) + 92px));
+    max-width:none;
+  }
+  .wish__hero{ font-size:clamp(52px, 16vw, 78px); }
+  .wish__eyebrow{ font-size:clamp(14px, 4vw, 18px); }
+  .wish__sub{ font-size:clamp(13px, 3.6vw, 16px); }
+
+  .endActions.is-shown{
+    left:50%; right:auto;
+    width:min(92vw, 340px);
+    bottom:max(16px, calc(env(safe-area-inset-bottom) + 12px));
+    gap:10px;
+  }
+  .surpriseBtn{
+    width:100%;
+    min-width:0;
+    min-height:52px;
+    padding:15px 20px;
+    font-size:14px;
+    letter-spacing:.12em;
+  }
+  .replay{
+    min-height:42px;
+    padding:10px 16px;
+  }
+
+  .surprise.is-open{
+    align-content:center;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      12px
+      max(12px, env(safe-area-inset-bottom));
+  }
+
+  .lock{
+    width:100%;
+    max-width:380px;
+    padding:22px 16px 16px;
+    border-radius:24px;
+  }
+  .lock__title{ font-size:clamp(24px, 7vw, 30px); }
+  .lock__hint{ font-size:13px; margin-bottom:14px; }
+  .lock__pad{ gap:8px; }
+  .lock__pad button{
+    height:56px;
+    border-radius:16px;
+    font-size:22px;
+  }
+
+  .envelopeStage{
+    width:100%;
+    max-width:400px;
+    justify-content:center;
+    position:relative;
+  }
+  .envelopeStage__close{
+    position:fixed;
+    top:max(10px, env(safe-area-inset-top));
+    right:max(10px, env(safe-area-inset-right));
+    width:44px; height:44px;
+    font-size:18px;
+    z-index:5;
+  }
+  .envelope{
+    width:min(88vw, 340px);
+    height:210px;
+    margin-top:36px;
+  }
+  /* Phone: after open, letter is a scrollable card — easy to read */
+  .envelope.is-open{
+    width:min(94vw, 380px);
+    height:auto;
+    min-height:0;
+    margin-top:8px;
+    filter:none;
+  }
+  .envelope.is-open .envelope__pocket,
+  .envelope.is-open .envelope__flap,
+  .envelope.is-open .envelope__seal{
+    display:none;
+  }
+  .letter{
+    padding:18px 16px 16px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .envelope.is-open .letter{
+    position:relative;
+    left:auto; right:auto; bottom:auto;
+    width:100%;
+    transform:none;
+    opacity:1;
+    max-height:min(70dvh, 520px);
+    border-radius:18px;
+    box-shadow:0 18px 40px -12px rgba(60,10,30,.45);
+  }
+  .letter__to{ font-size:clamp(30px, 9vw, 38px); }
+  .letter__body{
+    font-size:clamp(15px, 4.1vw, 17px);
+    line-height:1.5;
+  }
+  .envelopeStage__cue{ font-size:12px; padding:0 12px; text-align:center; }
+  .envelopeStage.is-open .envelopeStage__cue{
+    opacity:.85;
+    pointer-events:none;
+  }
+}
+
+@media (max-width:380px){
+  .hero__brand{ font-size:38px; }
+  .target{ width:100px; }
+  .lock__pad button{ height:52px; font-size:20px; }
+  .letter__body{ font-size:14.5px; }
+}
+
+/* Short phones / landscape phones */
+@media (max-height:520px){
+  .hero__brand{ top:4%; font-size:34px; }
+  .hero__eyebrow{ top:calc(4% + 2.4rem); }
+  .targetWrap{ top:30%; }
+  .wish{ bottom:14%; }
+  .envelope.is-open .letter{ max-height:48dvh; }
 }
 
 /* ============================================================

@@ -601,11 +601,13 @@ function applyNock(){
 }
 
 function refreshRig(){
-  // the grip is anchored here, and the heart sits at its layout centre (33% down,
-  // centred) — using the layout point, not a live rect, keeps the aim steady even
-  // while the heart is scaling in.
-  const gripX = W * 0.24, gripY = H * 0.76;
-  const heartX = W * 0.5, heartY = H * 0.38;
+  // Phone: keep the bow lower-center so thumbs can draw easily.
+  // Desktop: lower-left diagonal shot into the heart.
+  const phone = W < 720;
+  const gripX = W * (phone ? 0.42 : 0.24);
+  const gripY = H * (phone ? 0.78 : 0.76);
+  const heartX = W * 0.5;
+  const heartY = H * (phone ? 0.34 : 0.38);
   // rotation so local "up" (0,-1) maps to the grip→heart direction
   const aimRad = Math.atan2(heartX - gripX, gripY - heartY);
   pullUX = -Math.sin(aimRad); pullUY = Math.cos(aimRad);  // opposite of aim = pull-back
@@ -840,9 +842,11 @@ function autoFire(){
   });
 }
 
+let tapCandidate = false;
 archery.addEventListener('pointerdown', (e) => {
   if (played) return;
   drawing = true;
+  tapCandidate = true;
   try { archery.setPointerCapture(e.pointerId); } catch (_) {}
   startPX = e.clientX; startPY = e.clientY; startDraw = curDraw;
   e.preventDefault();
@@ -852,11 +856,21 @@ archery.addEventListener('pointermove', (e) => {
   // project the drag onto the pull-back axis, so dragging back along the aim
   // (down + away from the heart) draws the string — on any shot angle.
   const proj = (e.clientX - startPX) * pullUX + (e.clientY - startPY) * pullUY;
+  if (Math.abs(proj) > 10 || Math.hypot(e.clientX - startPX, e.clientY - startPY) > 12){
+    tapCandidate = false;
+  }
   setDraw(startDraw + proj);
 });
 function endDraw(){
   if (!drawing) return;
   drawing = false;
+  /* phones: a short tap on the bow also fires (easier than a long draw) */
+  if (tapCandidate && curDraw < maxDraw * 0.12){
+    tapCandidate = false;
+    autoFire();
+    return;
+  }
+  tapCandidate = false;
   if (curDraw > maxDraw * 0.26) fire(); else springBack();
 }
 archery.addEventListener('pointerup', endDraw);
@@ -920,7 +934,7 @@ function setSurpriseStage(stage){
   envelopeStage.classList.toggle('is-open', stage === 'letter');
   if (envelopeCue){
     envelopeCue.textContent = stage === 'letter'
-      ? 'a letter for you'
+      ? 'scroll to read ♥'
       : 'your letter is opening…';
   }
 }
