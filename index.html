@@ -175,6 +175,12 @@
       <p class="wish__sub" id="wSub">here&rsquo;s to a year that blooms</p>
     </div>
 
+    <div class="grade" aria-hidden="true">
+      <div class="grade__vignette"></div>
+      <div class="grade__grain"></div>
+    </div>
+
+    <!-- STEP 1 (end of film): only this button shows first -->
     <div class="endActions" id="endActions" hidden>
       <button class="surpriseBtn" id="surpriseBtn" type="button">
         <span class="surpriseBtn__spark" aria-hidden="true">✦</span>
@@ -188,10 +194,11 @@
       </button>
     </div>
 
-    <!-- SURPRISE — number lock → sealed envelope → letter -->
-    <div class="surprise" id="surprise" hidden aria-hidden="true">
+    <!-- STEP 2 lock → STEP 3 envelope (strict order via data-stage) -->
+    <div class="surprise" id="surprise" hidden aria-hidden="true" data-stage="lock">
       <div class="surprise__veil" id="surpriseVeil"></div>
 
+      <!-- STEP 2: number lock -->
       <div class="lock" id="lock" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
         <p class="lock__eyebrow">a secret, just for you</p>
         <h2 class="lock__title" id="lockTitle">Enter the code</h2>
@@ -219,7 +226,8 @@
         </div>
       </div>
 
-      <div class="envelopeStage" id="envelopeStage" hidden>
+      <!-- STEP 3: envelope opens after correct PIN -->
+      <div class="envelopeStage" id="envelopeStage">
         <button class="envelopeStage__close" id="envelopeClose" type="button" aria-label="Close letter">✕</button>
         <div class="envelope" id="envelope" aria-label="A sealed birthday letter">
           <div class="envelope__flap"></div>
@@ -237,13 +245,8 @@
             <p class="letter__sign">with all my heart ♥</p>
           </article>
         </div>
-        <p class="envelopeStage__cue" id="envelopeCue">tap the seal to open</p>
+        <p class="envelopeStage__cue" id="envelopeCue">your letter is opening&hellip;</p>
       </div>
-    </div>
-
-    <div class="grade" aria-hidden="true">
-      <div class="grade__vignette"></div>
-      <div class="grade__grain"></div>
     </div>
   </main>
 

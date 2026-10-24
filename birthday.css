@@ -464,35 +464,46 @@ body{
 @keyframes twk{ 0%,100%{ opacity:0; transform:scale(.5) rotate(-12deg); } 45%{ opacity:1; transform:scale(1.05) rotate(16deg); } }
 
 /* ============================================================
-   END ACTIONS — surprise + replay
+   END ACTIONS — STEP 1 after film (above the grain lens)
    ============================================================ */
 .endActions{
-  position:absolute; right:16px; bottom:16px; z-index:7;
-  display:flex; flex-direction:column; align-items:flex-end; gap:10px;
-  opacity:0; transform:translateY(10px);
+  position:absolute; left:50%; bottom:max(22px, env(safe-area-inset-bottom));
+  transform:translate(-50%, 14px);
+  z-index:20;
+  display:flex; flex-direction:column; align-items:center; gap:12px;
+  opacity:0;
   transition:opacity .55s ease, transform .55s var(--ease-out);
   pointer-events:none;
 }
-.endActions.is-shown{ opacity:1; transform:translateY(0); pointer-events:auto; }
+.endActions.is-shown{
+  opacity:1; transform:translate(-50%, 0);
+  pointer-events:auto;
+}
 
 .surpriseBtn{
-  display:inline-flex; align-items:center; gap:8px;
-  padding:12px 18px; border-radius:999px;
-  font:600 13px/1 "Cormorant Garamond", Georgia, serif;
-  letter-spacing:.1em; text-transform:uppercase;
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  min-width:min(86vw, 280px);
+  padding:16px 28px; border-radius:999px;
+  font:700 15px/1 "Cormorant Garamond", Georgia, serif;
+  letter-spacing:.14em; text-transform:uppercase;
   color:#fff8f4;
   background:linear-gradient(135deg, #e85a83 0%, #c41f52 55%, #9c0f42 100%);
-  border:1px solid rgba(255,220,230,.35);
+  border:1px solid rgba(255,220,230,.4);
   box-shadow:
-    0 10px 28px -8px rgba(150,20,60,.55),
-    0 0 0 1px rgba(255,255,255,.12) inset;
+    0 14px 36px -10px rgba(150,20,60,.6),
+    0 0 0 1px rgba(255,255,255,.14) inset;
   cursor:pointer;
-  transition:transform .25s var(--ease-out), box-shadow .25s ease, filter .25s ease;
+  animation:surprisePulse 2.4s ease-in-out infinite;
+  transition:transform .25s var(--ease-out), filter .25s ease;
 }
-.surpriseBtn:hover{ transform:translateY(-1px); filter:brightness(1.05); }
-.surpriseBtn:active{ transform:translateY(1px); }
+@keyframes surprisePulse{
+  0%,100%{ box-shadow:0 14px 36px -10px rgba(150,20,60,.55), 0 0 0 0 rgba(232,90,131,.35); }
+  50%{ box-shadow:0 16px 40px -8px rgba(150,20,60,.7), 0 0 0 10px rgba(232,90,131,0); }
+}
+.surpriseBtn:hover{ transform:translateY(-2px); filter:brightness(1.06); }
+.surpriseBtn:active{ transform:translateY(1px); animation:none; }
 .surpriseBtn__spark{
-  color:#ffe1a0; font-size:12px;
+  color:#ffe1a0; font-size:13px;
   animation:twk 2.4s ease-in-out infinite;
 }
 
@@ -500,21 +511,21 @@ body{
   display:inline-flex; align-items:center; gap:7px;
   padding:9px 15px 9px 12px; border-radius:999px;
   font:600 12.5px/1 "Cormorant Garamond", Georgia, serif; letter-spacing:.12em; text-transform:uppercase;
-  color:#8a4a5a; background:rgba(255,248,242,.72);
+  color:#8a4a5a; background:rgba(255,248,242,.82);
   border:1px solid rgba(150,60,80,.18);
   box-shadow:0 6px 20px -8px rgba(120,20,50,.4);
   backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   cursor:pointer;
   transition:background .3s ease;
 }
-.replay:hover{ background:rgba(255,252,248,.92); }
+.replay:hover{ background:rgba(255,252,248,.95); }
 .replay svg{ opacity:.8; }
 
 /* ============================================================
-   SURPRISE OVERLAY — lock + envelope
+   SURPRISE OVERLAY — STEP 2 lock, then STEP 3 envelope
    ============================================================ */
 .surprise{
-  position:absolute; inset:0; z-index:12;
+  position:absolute; inset:0; z-index:30;
   display:grid; place-items:center;
   padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
 }
@@ -526,8 +537,17 @@ body{
   backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
 }
 
-.lock{
+/* Strict stage visibility: only one step on screen at a time */
+.surprise .lock,
+.surprise .envelopeStage{
+  display:none;
   position:relative; z-index:1;
+}
+.surprise[data-stage="lock"] .lock{ display:block; }
+.surprise[data-stage="envelope"] .envelopeStage,
+.surprise[data-stage="letter"] .envelopeStage{ display:flex; }
+
+.lock{
   width:min(100%, 340px);
   padding:28px 22px 22px;
   border-radius:28px;
@@ -539,11 +559,12 @@ body{
     0 0 0 1px rgba(255,255,255,.5) inset;
   text-align:center;
   color:var(--ink);
-  transform:translateY(12px) scale(.96);
-  opacity:0;
-  transition:opacity .4s ease, transform .5s var(--ease-out);
+  animation:stageIn .45s var(--ease-out) both;
 }
-.surprise.is-lock .lock{ opacity:1; transform:none; }
+@keyframes stageIn{
+  from{ opacity:0; transform:translateY(16px) scale(.96); }
+  to{ opacity:1; transform:none; }
+}
 .lock__eyebrow{
   font-family:"Cormorant Garamond", Georgia, serif;
   font-style:italic; font-weight:600;
@@ -613,10 +634,10 @@ body{
 
 /* ---- envelope stage ---- */
 .envelopeStage{
-  position:relative; z-index:1;
   width:min(100%, 420px);
-  display:flex; flex-direction:column; align-items:center;
+  flex-direction:column; align-items:center;
   gap:14px;
+  animation:stageIn .5s var(--ease-out) both;
 }
 .envelopeStage__close{
   position:absolute; top:-8px; right:0; z-index:3;
@@ -727,8 +748,7 @@ body{
 }
 
 @media (max-width:420px){
-  .endActions{ right:12px; bottom:12px; }
-  .surpriseBtn{ padding:11px 15px; font-size:12px; }
+  .surpriseBtn{ min-width:min(90vw, 280px); padding:14px 22px; font-size:13px; }
   .envelope{ height:220px; }
 }
 

@@ -910,44 +910,50 @@ function paintPin(){
   });
 }
 
+let envelopeOpenTimer = 0;
+
+function setSurpriseStage(stage){
+  surprise.dataset.stage = stage;
+  envelope.classList.toggle('is-open', stage === 'letter');
+  envelopeStage.classList.toggle('is-open', stage === 'letter');
+  if (envelopeCue){
+    envelopeCue.textContent = stage === 'letter'
+      ? 'a letter for you'
+      : 'your letter is opening…';
+  }
+}
+
+/* STEP 1 → STEP 2: button click opens ONLY the lock */
 function openSurprise(){
+  if (envelopeOpenTimer){ clearTimeout(envelopeOpenTimer); envelopeOpenTimer = 0; }
+  hideEndActions();
   surprise.hidden = false;
   surprise.setAttribute('aria-hidden', 'false');
-  surprise.classList.add('is-lock');
-  lockEl.hidden = false;
-  envelopeStage.hidden = true;
-  envelope.classList.remove('is-open');
-  envelopeStage.classList.remove('is-open');
-  if (envelopeCue) envelopeCue.textContent = 'tap the seal to open';
+  setSurpriseStage('lock');
   resetPin();
 }
 
 function closeSurprise(){
-  surprise.classList.remove('is-lock');
+  if (envelopeOpenTimer){ clearTimeout(envelopeOpenTimer); envelopeOpenTimer = 0; }
   surprise.hidden = true;
   surprise.setAttribute('aria-hidden', 'true');
-  lockEl.hidden = false;
-  envelopeStage.hidden = true;
-  envelope.classList.remove('is-open');
-  envelopeStage.classList.remove('is-open');
+  setSurpriseStage('lock');
   resetPin();
+  /* return to STEP 1 so she can open the surprise again */
+  armReplay();
 }
 
+/* STEP 2 → STEP 3: correct PIN shows sealed envelope, then opens it */
 function unlockToEnvelope(){
-  surprise.classList.remove('is-lock');
-  lockEl.hidden = true;
-  envelopeStage.hidden = false;
-  envelope.classList.remove('is-open');
-  envelopeStage.classList.remove('is-open');
-  if (envelopeCue) envelopeCue.textContent = 'tap the seal to open';
-}
-
-function openEnvelope(){
-  envelope.classList.add('is-open');
-  envelopeStage.classList.add('is-open');
+  setSurpriseStage('envelope');
+  envelopeOpenTimer = setTimeout(() => {
+    envelopeOpenTimer = 0;
+    setSurpriseStage('letter');
+  }, 900);
 }
 
 function onPinDigit(n){
+  if (surprise.dataset.stage !== 'lock') return;
   if (pinBuf.length >= 4) return;
   pinBuf += n;
   paintPin();
@@ -955,7 +961,7 @@ function onPinDigit(n){
 
   if (pinBuf === SURPRISE_PIN){
     lockError.hidden = true;
-    setTimeout(unlockToEnvelope, 220);
+    setTimeout(unlockToEnvelope, 280);
     return;
   }
 
@@ -967,7 +973,11 @@ function onPinDigit(n){
 }
 
 function wireSurprise(){
-  surpriseBtn.addEventListener('click', openSurprise);
+  surpriseBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openSurprise();
+  });
 
   lockPad.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-n]');
@@ -979,14 +989,18 @@ function wireSurprise(){
   });
 
   window.addEventListener('keydown', (e) => {
-    if (surprise.hidden || lockEl.hidden) return;
+    if (surprise.hidden || surprise.dataset.stage !== 'lock') return;
     if (e.key >= '0' && e.key <= '9'){ e.preventDefault(); onPinDigit(e.key); }
     else if (e.key === 'Backspace'){ e.preventDefault(); pinBuf = pinBuf.slice(0, -1); paintPin(); lockError.hidden = true; }
     else if (e.key === 'Escape'){ e.preventDefault(); closeSurprise(); }
   });
 
+  /* optional: tap sealed envelope early to open the letter */
   envelope.addEventListener('click', () => {
-    if (!envelope.classList.contains('is-open')) openEnvelope();
+    if (surprise.dataset.stage === 'envelope'){
+      if (envelopeOpenTimer){ clearTimeout(envelopeOpenTimer); envelopeOpenTimer = 0; }
+      setSurpriseStage('letter');
+    }
   });
   envelopeClose.addEventListener('click', closeSurprise);
 }
