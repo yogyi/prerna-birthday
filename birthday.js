@@ -888,8 +888,10 @@ function enter(){
 }
 
 function armReplay(){
+  /* STEP 1 only — never open the lock here */
+  closeSurprise(false);
   endActions.hidden = false;
-  requestAnimationFrame(() => endActions.classList.add('is-shown'));
+  endActions.classList.add('is-shown');
 }
 
 function hideEndActions(){
@@ -928,19 +930,24 @@ function openSurprise(){
   if (envelopeOpenTimer){ clearTimeout(envelopeOpenTimer); envelopeOpenTimer = 0; }
   hideEndActions();
   surprise.hidden = false;
+  surprise.classList.add('is-open');
   surprise.setAttribute('aria-hidden', 'false');
   setSurpriseStage('lock');
   resetPin();
 }
 
-function closeSurprise(){
+function closeSurprise(showEndBtn = true){
   if (envelopeOpenTimer){ clearTimeout(envelopeOpenTimer); envelopeOpenTimer = 0; }
+  surprise.classList.remove('is-open');
   surprise.hidden = true;
   surprise.setAttribute('aria-hidden', 'true');
   setSurpriseStage('lock');
   resetPin();
   /* return to STEP 1 so she can open the surprise again */
-  armReplay();
+  if (showEndBtn){
+    endActions.hidden = false;
+    endActions.classList.add('is-shown');
+  }
 }
 
 /* STEP 2 → STEP 3: correct PIN shows sealed envelope, then opens it */
@@ -1007,7 +1014,7 @@ function wireSurprise(){
 
 /* back to Act 1, ready to be drawn again */
 function resetAll(){
-  closeSurprise();
+  closeSurprise(false);
   treeStop();
   showWish(false);
   window.bdayDone = false; replayArmed = false;
@@ -1045,16 +1052,22 @@ window.addEventListener('resize', () => { if (resizeRAF) return; resizeRAF = req
 
 resize();
 
+/* Hard-guarantee on boot: film only — lock + button stay closed */
+surprise.classList.remove('is-open');
+surprise.hidden = true;
+surprise.setAttribute('aria-hidden', 'true');
+hideEndActions();
 wireSurprise();
 
 if (reduceMotion){
+  /* still start on the invitation; skip to finale tree after a beat if needed */
   drawFinal();
 } else {
   buildMotes();
   document.fonts && document.fonts.ready.then(() => { refreshRig(); setDraw(0); });
   enter();
-  replay.addEventListener('click', resetAll);
 }
+replay.addEventListener('click', resetAll);
 
 /* ============================================================
    RECORDING HOOK — the rig draws + fires after its pre-roll

@@ -466,18 +466,19 @@ body{
 /* ============================================================
    END ACTIONS — STEP 1 after film (above the grain lens)
    ============================================================ */
-.endActions{
-  position:absolute; left:50%; bottom:max(22px, env(safe-area-inset-bottom));
-  transform:translate(-50%, 14px);
-  z-index:20;
-  display:flex; flex-direction:column; align-items:center; gap:12px;
-  opacity:0;
-  transition:opacity .55s ease, transform .55s var(--ease-out);
-  pointer-events:none;
+.endActions,
+.endActions[hidden]{
+  display:none !important;
 }
 .endActions.is-shown{
-  opacity:1; transform:translate(-50%, 0);
+  display:flex !important;
+  position:absolute; left:50%; bottom:max(22px, env(safe-area-inset-bottom));
+  transform:translate(-50%, 0);
+  z-index:20;
+  flex-direction:column; align-items:center; gap:12px;
+  opacity:1;
   pointer-events:auto;
+  animation:stageIn .55s var(--ease-out) both;
 }
 
 .surpriseBtn{
@@ -523,10 +524,20 @@ body{
 
 /* ============================================================
    SURPRISE OVERLAY — STEP 2 lock, then STEP 3 envelope
+   Must stay fully gone until .is-open (never show during the film).
    ============================================================ */
-.surprise{
+.surprise,
+.surprise[hidden]{
+  display:none !important;
+  visibility:hidden;
+  pointer-events:none;
+}
+.surprise.is-open{
+  display:grid !important;
+  visibility:visible;
+  pointer-events:auto;
   position:absolute; inset:0; z-index:30;
-  display:grid; place-items:center;
+  place-items:center;
   padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
 }
 .surprise__veil{
@@ -543,9 +554,9 @@ body{
   display:none;
   position:relative; z-index:1;
 }
-.surprise[data-stage="lock"] .lock{ display:block; }
-.surprise[data-stage="envelope"] .envelopeStage,
-.surprise[data-stage="letter"] .envelopeStage{ display:flex; }
+.surprise.is-open[data-stage="lock"] .lock{ display:block; }
+.surprise.is-open[data-stage="envelope"] .envelopeStage,
+.surprise.is-open[data-stage="letter"] .envelopeStage{ display:flex; }
 
 .lock{
   width:min(100%, 340px);
