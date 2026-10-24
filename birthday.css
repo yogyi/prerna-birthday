@@ -703,8 +703,9 @@ body{
   transition:transform .9s cubic-bezier(.2,.7,.2,1) .15s, opacity .5s ease .1s;
 }
 .envelope.is-open .letter{
-  transform:translateY(-42%);
+  transform:translateY(-58%);
   opacity:1;
+  max-height:min(62vh, 340px);
 }
 .letter__to{
   font-family:"Great Vibes", cursive;
